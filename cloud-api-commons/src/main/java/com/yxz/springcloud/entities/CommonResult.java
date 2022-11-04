@@ -1,9 +1,6 @@
 package com.yxz.springcloud.entities;
 
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class CommonResult<T>
 {
     private Integer code;

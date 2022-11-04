@@ -1,9 +1,74 @@
 springcloud学习记录
 
+## 目录
 
-# SpringCloud学习笔记1-10
+*   [SpringCloud学习笔记1-14](#springcloud学习笔记1-14)
+
+*   [1 项目地址 笔记地址](#1-项目地址-笔记地址)
+
+*   [2 零基础微服务框架理论入门](#2-零基础微服务框架理论入门)
+
+    *   [2.1 什么是微服务](#21-什么是微服务)
+
+    *   [2.2 **分布式微服务架构-落地维度**](#22-分布式微服务架构-落地维度)
+
+    *   [2.3 SpringCloud 简介](#23-springcloud-简介)
+
+*   [3.Boot和Cloud版本选型](#3boot和cloud版本选型)
+
+*   [4.Cloud组件停更说明](#4cloud组件停更说明)
+
+*   [5.父工程Project空间新建](#5父工程project空间新建)
+
+*   [6父工程pom文件](#6父工程pom文件)
+
+*   [7 DependencyManagement和Dependencies](#7-dependencymanagement和dependencies)
+
+*   [8 支付模块构建（上）](#8-支付模块构建上)
+
+*   [9支付模块构建（中）](#9支付模块构建中)
+
+*   [10 支付模块构建（下）](#10-支付模块构建下)
+
+*   [11. 开启热部署](#11-开启热部署)
+
+    *   [1.添加依赖](#1添加依赖)
+
+    *   [2.添加插件](#2添加插件)
+
+    *   [3.设置](#3设置)
+
+*   [12.消费者订单模块(上)](#12消费者订单模块上)
+
+    *   [1. 建module](#1-建module)
+
+    *   [2. 改pom](#2-改pom)
+
+    *   [3. 写yml](#3-写yml)
+
+    *   [4.主启动类](#4主启动类)
+
+    *   [5.业务类](#5业务类)
+
+        *   [5.1 实体类（复制payment工程的）](#51-实体类复制payment工程的)
+
+        *   [5.2controller](#52controller)
+
+        *   [5.3 配置类](#53-配置类)
+
+    *   [6.测试](#6测试)
+
+*   [13消费者订单模块（下）](#13消费者订单模块下)
+
+*   [14 工程重构](#14-工程重构)
+
+# SpringCloud学习笔记1-14
 
 # 1 项目地址 笔记地址
+
+项目地址：[yangxiaozhuo/springcloud (github.com)](https://github.com/yangxiaozhuo/springcloud "yangxiaozhuo/springcloud (github.com)")
+
+笔记博客地址：blog.yangxiaobai.top 或   [杨小白の博客 - Dream big and dare to fail (yangxiaozhuo.github.io)](https://yangxiaozhuo.github.io/ "杨小白の博客 - Dream big and dare to fail (yangxiaozhuo.github.io)")
 
 # 2 零基础微服务框架理论入门
 
@@ -57,17 +122,17 @@ springcloud学习记录
 
 [Spring Cloud中文网-官方文档中文版](https://www.springcloud.cc/ "Spring Cloud中文网-官方文档中文版") 包含的技术
 
-![](image/image_jXlVO50yYy.png)
+![](image/image_PnkgtXSRAW.png)
 
-![](image/image_RfTB2mL8DW.png)
+![](image/image_bbBiLFmkNQ.png)
 
 SpringCloud主流的技术栈
 
-![](image/image_C5JFU5FO7V.png)
+![](image/image_TpATxmrZuE.png)
 
 技术与解决内容对应关系
 
-![](image/image_LL821UTnWp.png)
+![](image/image_4-GPhqr9Ry.png)
 
 # 3.Boot和Cloud版本选型
 
@@ -85,7 +150,7 @@ boot的版本命名用的数字，cloud用的字母表示
 
 *   Spring Boot 与 Spring Cloud 兼容性查看
 
-![](image/image_ne85zG8v8Q.png)
+![](image/image_KVM_FUPVRm.png)
 
 *   json接口查看（[https://start.spring.io/actuator/info](https://start.spring.io/actuator/info "https://start.spring.io/actuator/info")）
 
@@ -407,6 +472,9 @@ mybatis:
   mapperLocations: classpath:mapper/*.xml
   type-aliases-package: com.atguigu.springcloud.entities    # 所有Entity别名类所在包
 
+logging:
+  level:
+    com : debug
 
 ```
 
@@ -636,6 +704,335 @@ public class PaymentController {
 
 postman测试
 
-![](image/image_BjK2GNkA66.png)
+![](image/image_9CTNveWDb2.png)
 
-![](image/image_6ApWmxp_c6.png)
+![](image/image_aJ_8ERoJa-.png)
+
+# 11. 开启热部署
+
+（笔记本用户本人不建议开启）
+
+## 1.添加依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+## 2.添加插件
+
+```xml
+<build>
+    <!--  <finalName>你的工程名</finalName>（单一工程时添加）
+    -->
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+                <fork>true</fork>
+                <addResources>true</addResources>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+
+```
+
+## 3.设置
+
+File -> Settings(New Project Settings->Settings for New Projects) ->Complier
+
+下面项勾选
+
+*   Automatically show first error in editor
+
+*   Display notification on build completion
+
+*   Build project automatically
+
+*   Compile independent modules in parallel
+
+键入Ctrl + Shift + Alt + / ，打开Registry，勾选：
+
+*   compiler.automake.allow\.when.app.running
+
+*   actionSystem.assertFocusAccessFromEdt
+
+# 12.消费者订单模块(上)
+
+创建微服务模块套路
+
+1.  建Module
+
+2.  改POM
+
+3.  写YML
+
+4.  主启动
+
+5.  业务类
+
+## 1. 建module
+
+创建名为cloud-consumer-order80的maven工程。
+
+## 2. 改pom
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springcloud</artifactId>
+        <groupId>com.yxz.springcloud</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloud-consumer-order80</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
+```
+
+## 3. 写yml
+
+```yaml
+server:
+  port: 80
+
+logging:
+  level:
+    com : debug
+```
+
+## 4.主启动类
+
+```java
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MainApp80 {
+    public static void main(String[] args) {
+        SpringApplication.run(MainApp80.class, args);
+    }
+}
+
+```
+
+## 5.业务类
+
+### 5.1 实体类（复制payment工程的）
+
+### 5.2controller
+
+我这里使用了restful风格
+
+```java
+import com.yxz.springcloud.entities.CommonResult;
+import com.yxz.springcloud.entities.Payment;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+@RequestMapping("/consumer/payment")
+@RestController
+@Slf4j
+public class OrderController {
+
+    public static final String PAYMENT_URL = "http://localhost:8001";
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @GetMapping("/create")
+    public CommonResult<Payment> create(Payment payment) {
+        return restTemplate.postForObject(PAYMENT_URL + "/payment", payment, CommonResult.class);
+    }
+
+    @GetMapping("/get/{id}")
+    public CommonResult<Payment> getPayment(@PathVariable("id") Long id) {
+        return restTemplate.getForObject(PAYMENT_URL + "/payment/"+id, CommonResult.class);
+    }
+}
+
+```
+
+### 5.3 配置类
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class ApplicationConfig {
+
+    @Bean
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate();
+    }
+}
+
+```
+
+## 6.测试
+
+[localhost/consumer/payment/get/31](http://localhost/consumer/payment/get/31 "localhost/consumer/payment/get/31")
+
+![](image/image_Svdh5vep7-.png)
+
+[localhost/consumer/payment/create?serial=aaa](http://localhost/consumer/payment/create?serial=aaa "localhost/consumer/payment/create?serial=aaa")
+
+![](image/image_VZp3F6rXrR.png)
+
+# 13消费者订单模块（下）
+
+[localhost/consumer/payment/create?serial=aaa](http://localhost/consumer/payment/create?serial=aaa "localhost/consumer/payment/create?serial=aaa")
+
+虽然返回成功，但是观测数据库中新加了一个null的值
+
+这是因为在在loud-provider-payment8001工程的`PaymentController`中没有添加`@RequestBody`注解。
+
+```java
+public class PaymentController {
+    @PostMapping()
+    public CommonResult create(/*这里*/@RequestBody Payment payment) {
+        ····
+    }
+```
+
+***
+
+通过修改idea的workspace.xml的方式来快速打开Run Dashboard窗口
+
+1.  打开工程路径下的.idea文件夹的workspace.xml
+
+2.  在`<component name="RunDashboard">`中修改或添加以下代码
+
+3.  重启idea
+
+```xml
+<option name="configurationTypes">
+  <set>
+    <option value="SpringBootApplicationConfigurationType"/>
+    </set>
+</option>
+
+```
+
+# 14 工程重构
+
+发现cloud-consumer-order80与cloud-provider-payment8001中都有重复的entities实体类，这样我们将公共部分（包括工具类等）抽离出来作为一个新的工程，其他微服务模块在pom模块中引用即可。
+
+**1.新建 - cloud-api-common**
+
+**2.修改pom**
+
+导入了hutool-all工具包
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springcloud</artifactId>
+        <groupId>com.yxz.springcloud</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloud-api-commons</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+    </dependencies>
+</project>
+```
+
+**3.移入entities**
+
+将cloud-consumer-order80和cloud-provider-payment8001的包移入cloud-api-commons工程下
+
+**4.maven clean、maven install**
+
+**5. 改造80和8001**
+
+1.  删除entities包
+
+2.  引入cloud-api-commons依赖
+
+```xml
+<dependency>
+    <groupId>com.yxz.springcloud</groupId>
+    <artifactId>cloud-api-commons</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```
+
+**6.测试**
+
+[localhost/consumer/payment/get/31](http://localhost/consumer/payment/get/31 "localhost/consumer/payment/get/31")
+
+[http://localhost/consumer/payment/create?serial=bbb](http://localhost/consumer/payment/create?serial=bbb "http://localhost/consumer/payment/create?serial=bbb")
+
+没有问题
+
+***
+
+到此已经学习完cloud课程的13%内容，和前四章节的内容
+
+![](image/image_ml_j7uhKqe.png)
