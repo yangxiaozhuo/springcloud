@@ -178,7 +178,7 @@ boot的版本命名用的数字，cloud用的字母表示
 
     *   × Eureka（停更不停用）
 
-    *   √ Zookeeper (见dubbo笔记)
+    *   √ Zookeeper ([见dubbo笔记](https://blog.yangxiaobai.top/2022/10/31/分布式/dubbo/))
 
     *   √ Consul
 
