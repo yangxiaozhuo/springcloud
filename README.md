@@ -6,6 +6,8 @@ springcloud学习记录
 
 *   [SpringCloud学习笔记15-35](#springcloud学习笔记15-35)
 
+*   [SpringCloud学习笔记36-46](#springcloud学习笔记36-46)
+
 *   [1 项目地址 笔记地址](#1-项目地址-笔记地址)
 
 *   [2 零基础微服务框架理论入门](#2-零基础微服务框架理论入门)
@@ -73,6 +75,28 @@ springcloud学习记录
 *   [34.服务消费者注册进consul](#34服务消费者注册进consul)
 
 *   [35.三个注册中心的异同点](#35三个注册中心的异同点)
+
+*   [36.Ribbon入门](#36ribbon入门)
+
+*   [37.Ribbon的负载均衡和Rest调用](#37ribbon的负载均衡和rest调用)
+
+*   [38.Ribbon默认自带的负载规则](#38ribbon默认自带的负载规则)
+
+*   [39.Ribbon负载规则替换](#39ribbon负载规则替换)
+
+*   [40.Ribbon默认负载轮询算法原理](#40ribbon默认负载轮询算法原理)
+
+*   [41.RoundRobinRule源码分析](#41roundrobinrule源码分析)
+
+*   [42.Ribbon之手写轮询算法](#42ribbon之手写轮询算法)
+
+*   [43.OpenFeign是什么](#43openfeign是什么)
+
+*   [44.OpenFeign服务调用](#44openfeign服务调用)
+
+*   [45.OpenFeign超时控制](#45openfeign超时控制)
+
+*   [46.OpenFeign日志增强](#46openfeign日志增强)
 
 # SpringCloud学习笔记1-14
 
@@ -2246,4 +2270,592 @@ CAP理论的核心是：**一个分布式系统不可能同时很好的满足一
 到此已经学习完cloud课程的25.65%内容，和前七章节的内容
 
 ![](image/image_z0xuDAnbkd.png)
+
+# SpringCloud学习笔记36-46
+
+# 36.Ribbon入门
+
+Spring Cloud Ribbon是基于Netflix Ribbon实现的一套**客户端负载均衡的工具**。主要功能是**提供客户端的软件负载均衡算法和服务调用**。
+
+**LB负载均衡(Load Balance)是什么**
+简单的说就是将用户的请求平摊的分配到多个服务上，从而达到系统的HA（高可用）。
+
+**Ribbon本地负载均衡客户端 VS Nginx服务端负载均衡区别**
+
+*   Nginx是服务器负载均衡，客户端所有请求都会交给nginx，然后由nginx实现转发请求。即负载均衡是由服务端实现的。
+
+*   Ribbon本地负载均衡，在调用微服务接口时候，会在注册中心上获取注册信息服务列表之后缓存到JVM本地，从而在本地实现RPC远程服务调用技术。
+
+1.  集中式LB：即在服务的消费方和提供方之间使用独立的LB设施(可以是硬件，如F5, 也可以是软件，如nginx), 由该设施负责把访问请求通过某种策略转发至服务的提供方；
+
+2.  进程内LB：将LB逻辑集成到消费方，消费方从服务注册中心获知有哪些地址可用，然后自己再从这些地址中选择出一个合适的服务器。Ribbon就属于进程内LB，它只是一个类库，集成于消费方进程，消费方通过它来获取到服务提供方的地址。
+
+**一句话**
+
+负载均衡 + RestTemplate调用
+
+# 37.Ribbon的负载均衡和Rest调用
+
+**架构说明**
+
+总结：Ribbon其实就是一个软负载均衡的客户端组件，他可以和其他所需请求的客户端结合使用，和eureka结合只是其中的一个实例。
+
+![](image/image_UCOKm9zMxh.png)
+
+Ribbon在工作时分成两步
+
+*   第一步先选择 EurekaServer ,它优先选择在同一个区域内负载较少的server.
+
+*   第二步再根据用户指定的策略，在从server取到的服务注册列表中选择一个地址。
+
+其中Ribbon提供了多种策略：比如轮询、随机和根据响应时间加权。
+
+**RestTemplate的使用**
+
+**getForObjiect和getForEntity方法**
+
+getForObject()：返回对象为响应体中数据转化成的对象，基本上可以理解为Json。
+
+getForEntity()：返回对象为ResponseEntity对象，包含了响应中的一些重要信息，比如响应头、响应状态码、响应体等。
+
+**postForObjiect和postForEntity方法同理**
+
+```java
+@GetMapping("/getForEntity/{id}")
+public CommonResult<Payment> getPayment2(@PathVariable("id") Long id) {
+    ResponseEntity<CommonResult> entity = restTemplate.getForEntity(PAYMENT_URL + "/payment/" + id, CommonResult.class);
+    if (entity.getStatusCode().is2xxSuccessful()) {
+        return entity.getBody();
+    } else {
+        return new CommonResult<>(444,"操作失败");
+    }
+}
+```
+
+# 38.Ribbon默认自带的负载规则
+
+![](image/image_w7A0UnXhT0.png)
+
+IRule接口
+
+*   RoundRobinRule 轮询
+
+*   RandomRule 随机
+
+*   RetryRule 先按照RoundRobinRule的策略获取服务，如果获取服务失败则在指定时间内会进行重
+
+*   WeightedResponseTimeRule 对RoundRobinRule的扩展，响应速度越快的实例选择权重越大，越容易被选择
+
+*   BestAvailableRule 会先过滤掉由于多次访问故障而处于断路器跳闸状态的服务，然后选择一个并发量最小的服务
+
+*   AvailabilityFilteringRule 先过滤掉故障实例，再选择并发较小的实例
+
+*   ZoneAvoidanceRule 默认规则,复合判断server所在区域的性能和server的可用性选择服务器
+
+# 39.Ribbon负载规则替换
+
+1.  修改cloud-consumer-order80
+
+2.  注意不能放在@ComponentScan能扫码的包下
+
+3.  新建package-com.yxz.myrule
+
+4.  新建类MySelfRule
+
+5.  主启动添加注解@RibbonClient(name = "CLOUD-PAYMENT-SERVICE", configuration = MyselfRule.class)
+
+```java
+@Configuration
+public class MyselfRule {
+    @Bean
+    public IRule myRule() {
+        return new RandomRule();
+    }
+}
+```
+
+```java
+@EnableEurekaClient
+@SpringBootApplication
+@RibbonClient(name = "CLOUD-PAYMENT-SERVICE", configuration = MyselfRule.class)
+public class MainApp80 {
+    public static void main(String[] args) {
+        SpringApplication.run(MainApp80.class, args);
+    }
+}
+```
+
+测试，无误
+
+# 40.Ribbon默认负载轮询算法原理
+
+**默认负载轮训算法: rest接口第几次请求数 % 服务器集群总数量 = 实际调用服务器位置下标，每次服务重启动后rest接口计数从1开始**。
+
+`List<Servicelnstance> instances = discoveryClient.getInstances("CLOUD-PAYMENT-SERVICE");`
+
+# 41.RoundRobinRule源码分析
+
+```java
+public interface IRule{
+    /*
+     * choose one alive server from lb.allServers or
+     * lb.upServers according to key
+     * 
+     * @return choosen Server object. NULL is returned if none
+     *  server is available 
+     */
+
+    public Server choose(Object key);
+    
+    public void setLoadBalancer(ILoadBalancer lb);
+    
+    public ILoadBalancer getLoadBalancer();    
+}
+
+```
+
+```java
+package com.netflix.loadbalancer;
+
+import com.netflix.client.config.IClientConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * The most well known and basic load balancing strategy, i.e. Round Robin Rule.
+ *
+ * @author stonse
+ * @author Nikos Michalakis <nikos@netflix.com>
+ *
+ */
+public class RoundRobinRule extends AbstractLoadBalancerRule {
+
+    private AtomicInteger nextServerCyclicCounter;
+    private static final boolean AVAILABLE_ONLY_SERVERS = true;
+    private static final boolean ALL_SERVERS = false;
+
+    private static Logger log = LoggerFactory.getLogger(RoundRobinRule.class);
+
+    public RoundRobinRule() {
+        nextServerCyclicCounter = new AtomicInteger(0);
+    }
+
+    public RoundRobinRule(ILoadBalancer lb) {
+        this();
+        setLoadBalancer(lb);
+    }
+
+    //重点关注这方法。
+    public Server choose(ILoadBalancer lb, Object key) {
+        if (lb == null) {
+            log.warn("no load balancer");
+            return null;
+        }
+
+        Server server = null;
+        int count = 0;
+        while (server == null && count++ < 10) {
+            List<Server> reachableServers = lb.getReachableServers();
+            List<Server> allServers = lb.getAllServers();
+            int upCount = reachableServers.size();
+            int serverCount = allServers.size();
+
+            if ((upCount == 0) || (serverCount == 0)) {
+                log.warn("No up servers available from load balancer: " + lb);
+                return null;
+            }
+
+            int nextServerIndex = incrementAndGetModulo(serverCount);
+            server = allServers.get(nextServerIndex);
+
+            if (server == null) {
+                /* Transient. */
+                Thread.yield();
+                continue;
+            }
+
+            if (server.isAlive() && (server.isReadyToServe())) {
+                return (server);
+            }
+
+            // Next.
+            server = null;
+        }
+
+        if (count >= 10) {
+            log.warn("No available alive servers after 10 tries from load balancer: "
+                    + lb);
+        }
+        return server;
+    }
+
+    /**
+     * Inspired by the implementation of {@link AtomicInteger#incrementAndGet()}.
+     *
+     * @param modulo The modulo to bound the value of the counter.
+     * @return The next value.
+     */
+    private int incrementAndGetModulo(int modulo) {
+        for (;;) {
+            int current = nextServerCyclicCounter.get();
+            int next = (current + 1) % modulo;//求余法
+            if (nextServerCyclicCounter.compareAndSet(current, next))
+                return next;
+        }
+    }
+
+    @Override
+    public Server choose(Object key) {
+        return choose(getLoadBalancer(), key);
+    }
+
+    @Override
+    public void initWithNiwsConfig(IClientConfig clientConfig) {
+    }
+}
+
+```
+
+# 42.Ribbon之手写轮询算法
+
+这里看上一节源码和这一节手写过程中不算很清晰，全部看完之后回头看发现挺简单。也不要被弹幕影响，本人还没学过JUC，做个简单的总结，再展示具体的操作。
+
+1.8001和8002提供一个`/payment/lb`接口，返回值就是自己的端口
+
+2.80，提供一个接口`/consumer/payment/lb`需要实现的内容是，轮询调用8001和8002的`/payment/lb`接口，并返回值。
+
+3.80，`/consumer/payment/lb`中首先需要得到，注册中心中，有多少个名为`"CLOUD-PAYMENT-SERVICE"`的服务可用，并返回list。
+
+4.80，我有一个LB的类，我把3中得到的Servicelist传入进去，需要告诉我一个int类型的返回值index，我去取Servicelist的第index的uri去调用即可。（到此80新加的接口就完成使命了，重点来到了，这个需要手动实现的LB类）
+
+**5.重点来了**
+
+首先是低配版的lb：类中维护了一个int型的变量名为next，传入Servicelist，返回next的值，并且把next++供下次调用。
+
+高配版的lb：需要保证原子性，引入JUC的`private AtomicInteger atomicInteger = new AtomicInteger(0);`实现的功能和低配版一样。
+
+笔记代码如下
+
+1.更改8001和8002的controller
+
+```java
+@GetMapping(value = "/lb")
+public String getPaymentLB(){
+    return serverPort;
+}
+```
+
+2.80中 注销ApplicationConfig的@LoadBalanced注解，和启动类上的@RibbonClient注解
+
+3.80中添加controller方法
+
+```java
+@Resource
+private LoadBalance loadBalance;
+
+@Autowired
+private RestTemplate restTemplate;
+
+@Resource
+private DiscoveryClient discoveryClient;
+@GetMapping(value = "/lb")
+public String getPaymentLB() {
+    List<ServiceInstance> instances = discoveryClient.getInstances("CLOUD-PAYMENT-SERVICE");
+    if (instances == null || instances.size() <= 0) {
+        return null;
+    }
+    ServiceInstance serviceInstance = loadBalance.instance(instances);
+    URI uri = serviceInstance.getUri();
+    return restTemplate.getForObject(uri + "/payment/lb", String.class);
+}
+```
+
+4.添加LoadBalance接口（为了规范化）
+
+```java
+public interface LoadBalance {
+    ServiceInstance instance(List<ServiceInstance> serviceInstances);
+}
+
+```
+
+5.添加MyLB是LoadBalance的实现类
+
+```java
+@Component
+public class MyLB implements LoadBalance {
+
+    private AtomicInteger atomicInteger = new AtomicInteger(0);
+
+    public final int getAndIncrement() {
+        int current;
+        int next;
+        do {
+            current = atomicInteger.get();
+            next = current >= 2145483647 ? 0 : current + 1;
+        } while (!this.atomicInteger.compareAndSet(current, next));
+        System.out.println("*******next:" + next);
+        return next;
+    }
+
+    @Override
+    public ServiceInstance instance(List<ServiceInstance> serviceInstances) {
+        int index =  getAndIncrement() % serviceInstances.size();
+        return serviceInstances.get(index);
+    }
+}
+
+```
+
+6.测试
+
+无误
+
+# 43.OpenFeign是什么
+
+Feign是一个声明式的Web服务客户端，让编写Web服务客户端变得非常容易，只需创建一个接口并在接口上添加注解即可
+
+**Feign集成了Ribbon**
+
+利用Ribbon维护了Payment的服务列表信息，并且通过轮询实现了客户端的负载均衡。而与Ribbon不同的是，**通过feign只需要定义服务绑定接口且以声明式的方法**，优雅而简单的实现了服务调用。
+
+# 44.OpenFeign服务调用
+
+**1.建cloud-consumer-feign-order80**
+
+**2.pom**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springcloud</artifactId>
+        <groupId>com.yxz.springcloud</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloud-consumer-feign-order80</artifactId>
+
+    <dependencies>
+        <!--openfeign-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <!--eureka client-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- 引入自己定义的api通用包，可以使用Payment支付Entity -->
+        <dependency>
+            <groupId>com.yxz.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--web-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!--一般基础通用配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
+```
+
+**3.yml**
+
+```yaml
+server:
+  port: 80
+
+eureka:
+  client:
+    register-with-eureka: false
+    service-url:
+      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/
+
+```
+
+**4.主启动**
+
+```java
+@SpringBootApplication
+@EnableFeignClients   /*启动注解*/
+public class OrderFeignMain80 {
+    public static void main(String[] args) {
+        SpringApplication.run(OrderFeignMain80.class, args);
+    }
+}
+```
+
+**5.业务类**
+
+新建com.yxz.springcloud.service
+
+```java
+import com.yxz.springcloud.entities.CommonResult;
+import com.yxz.springcloud.entities.Payment;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+/**
+ * @author yangxiaozhuo
+ * @date 2022/11/07
+ */
+@Component
+@FeignClient(value = "CLOUD-PAYMENT-SERVICE")
+public interface PaymentFeignService {
+    @GetMapping(value = "/payment/{id}")
+    public CommonResult<Payment> getPaymentById(@PathVariable("id") Long id);
+
+    @GetMapping(value = "/payment/feign/timeout")
+    String paymentFeignTimeOut();
+}
+
+```
+
+controller
+
+```java
+package com.yxz.springcloud.controller;
+
+import com.yxz.springcloud.entities.CommonResult;
+import com.yxz.springcloud.entities.Payment;
+import com.yxz.springcloud.service.PaymentFeignService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+
+/**
+ * @author yangxiaozhuo
+ * @date 2022/11/07
+ */
+@RestController
+@Slf4j
+public class OrderFeignController {
+    @Resource
+    private PaymentFeignService paymentFeignService;
+
+    @GetMapping("/consumer/payment/get/{id}")
+    public CommonResult<Payment> getPaymentById(@PathVariable("id") Long id) {
+        return paymentFeignService.getPaymentById(id);
+    }
+
+    @GetMapping(value = "/consumer/payment/feign/timeout")
+    public String paymentFeignTimeOut(){
+        return paymentFeignService.paymentFeignTimeOut();
+    }
+}
+
+```
+
+**6.测试**
+
+# 45.OpenFeign超时控制
+
+**超时设置，故意设置超时演示出错情况**
+
+1.服务提供方8001故意写暂停程序
+
+```java
+@GetMapping(value = "/feign/timeout")
+public String paymentFeignTimeOut()
+{
+    System.out.println("*****paymentFeignTimeOut from port: "+serverPort);
+    //暂停几秒钟线程
+    try { TimeUnit.SECONDS.sleep(3); } catch (InterruptedException e) { e.printStackTrace(); }
+    return serverPort;
+}
+```
+
+测试
+
+![](image/image_3J2ecwdPyT.png)
+
+这是因为feign默认是1秒钟等待响应，在80的yml中配置超时等待时间
+
+```yaml
+#设置feign客户端超时时间(OpenFeign默认支持ribbon)(单位：毫秒)
+ribbon:
+  #指的是建立连接所用的时间，适用于网络状况正常的情况下,两端连接所用的时间
+  ReadTimeout: 5000
+  #指的是建立连接后从服务器读取到可用资源所用的时间
+  ConnectTimeout: 5000
+```
+
+**测试**
+
+成功访问
+
+![](image/image_8T3XczfTEN.png)
+
+# 46.OpenFeign日志增强
+
+**日志级别**
+
+*   NONE：默认的，不显示任何日志;
+
+*   BASIC：仅记录请求方法、URL、响应状态码及执行时间;
+
+*   HEADERS：除了BASIC中定义的信息之外，还有请求和响应的头信息;
+
+*   FULL：除了HEADERS中定义的信息之外，还有请求和响应的正文及元数据。
+
+**新增配置Bean**
+
+```java
+@Configuration
+public class FeiginConfig {
+    @Bean
+    public Logger.Level serLogerLevel() {
+        return Logger.Level.FULL;
+    }
+}
+```
+
+**新增yml设置**
+
+```yaml
+logging:
+  level:
+    # feign日志以什么级别监控哪个接口
+    com.yxz.springcloud.service.PaymentFeignService: debug
+```
+
+测试，控制台打印更多信息
+
 
