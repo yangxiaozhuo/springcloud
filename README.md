@@ -10,6 +10,8 @@ springcloud学习记录
 
 *   [SpringCloud学习笔记47-64](#springcloud学习笔记47-64)
 
+*   [SpringCloud学习笔记65-73](#springcloud学习笔记65-73)
+
 *   [1 项目地址 笔记地址](#1-项目地址-笔记地址)
 
 *   [2 零基础微服务框架理论入门](#2-零基础微服务框架理论入门)
@@ -136,13 +138,31 @@ springcloud学习记录
 
 *   [64.Hystrix图形化Dashboard监控实战](#64hystrix图形化dashboard监控实战)
 
+*   [65.GateWay和Zuul课程说明](#65gateway和zuul课程说明)
+
+*   [66.GateWay是什么](#66gateway是什么)
+
+*   [67.GateWay非阻塞异步模型](#67gateway非阻塞异步模型)
+
+*   [68.Gateway工作流程](#68gateway工作流程)
+
+*   [69.Gateway9527搭建](#69gateway9527搭建)
+
+*   [70.Gateway配置路由的两种方式](#70gateway配置路由的两种方式)
+
+*   [71.GateWay配置动态路由](#71gateway配置动态路由)
+
+*   [72.GateWay常用的Predicate](#72gateway常用的predicate)
+
+*   [73.GateWay的Filter](#73gateway的filter)
+
 # SpringCloud学习笔记1-14
 
 # 1 项目地址 笔记地址
 
-项目地址：[yangxiaozhuo/springcloud (github.com)](https://github.com/yangxiaozhuo/springcloud "yangxiaozhuo/springcloud (github.com)")
+项目地址：[https://yangxiaobai.top/](https://github.com/yangxiaozhuo/springcloud "yangxiaozhuo/springcloud (github.com)")
 
-笔记博客地址：blog.yangxiaobai.top 或   [杨小白の博客 - Dream big and dare to fail (yangxiaozhuo.github.io)](https://yangxiaozhuo.github.io/ "杨小白の博客 - Dream big and dare to fail (yangxiaozhuo.github.io)")
+笔记博客地址：[杨小白の博客 - Dream big and dare to fail (yangxiaobai.top/)](https://yangxiaobai.top/) 或   [杨小白の博客 - Dream big and dare to fail (yangxiaozhuo.github.io)](https://yangxiaozhuo.github.io/ "杨小白の博客 - Dream big and dare to fail (yangxiaozhuo.github.io)")
 
 # 2 零基础微服务框架理论入门
 
@@ -3693,3 +3713,5 @@ public class HystrixDashboardMain9001 {
 
 
 
+
+# SpringClo
