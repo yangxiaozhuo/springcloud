@@ -3712,6 +3712,343 @@ public class HystrixDashboardMain9001 {
 ![](image/image_K_7no746A6.png)
 
 
+# SpringCloud学习笔记65-73
+
+# 65.GateWay和Zuul课程说明
+
+# 66.GateWay是什么
+
+上一代zuul 1.X ：[https://github.com/Netflix/zuul/wiki](https://github.com/Netflix/zuul/wiki "https://github.com/Netflix/zuul/wiki")
+
+当前gateway ： [https://cloud.spring.io/spring-cloud-static/spring-cloud-gateway/2.2.1.RELEASE/reference/html/](https://cloud.spring.io/spring-cloud-static/spring-cloud-gateway/2.2.1.RELEASE/reference/html/ "https://cloud.spring.io/spring-cloud-static/spring-cloud-gateway/2.2.1.RELEASE/reference/html/")
+
+Spring Cloud Gateway的目标提供统一的路由方式且基于 Filter 链的方式提供了网关基本的功能，例如：安全，监控/指标，和限流。
+
+**一句话：** SpringCloud Gateway 使用的Webflux中的reactor-netty响应式编程组件，底层使用了Netty通讯框架。
+
+**能干嘛**：
+
+*   方向代理
+
+*   鉴权
+
+*   流量控制
+
+*   熔断
+
+*   日志监控
+
+**微服务架构中网关在哪里**
+
+![](image/image_WwF1MSjm4z.png)
+
+# 67.GateWay非阻塞异步模型
+
+Servlet是一个简单的网络IO模型，当请求进入Servlet container时，Servlet container就会为其绑定一个线程，在并发不高的场景下这种模型是适用的。但是一旦高并发(如抽风用Jmeter压)，线程数量就会上涨，而线程资源代价是昂贵的（上线文切换，内存消耗大）严重影响请求的处理时间。在一些简单业务场景下，不希望为每个request分配一个线程，只需要1个或几个线程就能应对极大并发的请求，这种业务场景下servlet模型没有优势。
+
+所以Zuul 1.X是基于servlet之上的一个阻塞式处理模型，即spring实现了处理所有request请求的一个servlet（DispatcherServlet）并由该servlet阻塞式处理处理。所以Springcloud Zuul无法摆脱servlet模型的弊端
+
+Spring WebFlux 是 Spring 5.0 引入的新的响应式框架，区别于 Spring MVC，它不需要依赖Servlet API，它是完全异步非阻塞的，并且基于 Reactor 来实现响应式流规范。
+
+# 68.Gateway工作流程
+
+**三大核心概念**
+
+1.  Route(路由) - 路由是构建网关的基本模块,它由ID,目标URI,一系列的断言和过滤器组成,如断言为true则匹配该路由；
+
+2.  Predicate(断言) - 参考的是Java8的java.util.function.Predicate，开发人员可以匹配HTTP请求中的所有内容(例如请求头或请求参数),如果请求与断言相匹配则进行路由；
+
+3.  Filter(过滤) - 指的是Spring框架中GatewayFilter的实例,使用过滤器,可以在请求被路由前或者之后对请求进行修改。
+
+web请求，通过一些匹配条件，定位到真正的服务节点。并在这个转发过程的前后，进行一些精细化控制。
+predicate就是我们的匹配条件；
+而filter，就可以理解为一个无所不能的拦截器。有了这两个元素，再加上目标uri，就可以实现一个具体的路由了
+
+**Gateway工作流程**
+
+路由转发+执行过滤器链
+
+![](image/image_eshoPZD_tA.png)
+
+# 69.Gateway9527搭建
+
+**1.建Module - cloud-gateway-gateway9527**
+
+**2.POM**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springcloud</artifactId>
+        <groupId>com.yxz.springcloud</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloud-gateway-gateway9527</artifactId>
+
+    <dependencies>
+        <!--gateway-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+        <!--eureka-client-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <!-- 引入自己定义的api通用包，可以使用Payment支付Entity -->
+        <dependency>
+            <groupId>com.yxz.springcloud</groupId>
+            <artifactId>cloud-api-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--一般基础配置类-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 
-# SpringClo
+</project>
+```
+
+**3.yml**
+
+```yaml
+server:
+  port: 9527
+
+spring:
+  application:
+    name: cloud-gateway
+    
+eureka:
+  instance:
+    hostname: cloud-gateway-service
+  client: #服务提供者provider注册进eureka服务列表内
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://eureka7001.com:7001/eureka
+
+```
+
+**4.主启动**
+
+```java
+@SpringBootApplication
+@EnableEurekaClient
+public class GateWayMain9527 {
+    public static void main(String[] args) {
+        SpringApplication.run(GateWayMain9527.class,args);
+    }
+}
+```
+
+**5.要求访问9527能够访问到8001**
+
+**6.新增yml配置**
+
+```yaml
+server:
+  port: 9527
+
+spring:
+  application:
+    name: cloud-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true #开启从注册中心动态创建路由的功能，利用微服务名进行路由
+      routes:
+        - id: payment_routh #payment_route    #路由的ID，没有固定规则但要求唯一，建议配合服务名
+          # uri: http://localhost:8001          #匹配后提供服务的路由地址
+          uri: lb://cloud-payment-service #匹配后提供服务的路由地址
+          predicates:
+            - Path=/payment/get/**         # 断言，路径相匹配的进行路由
+
+        - id: payment_routh2 #payment_route    #路由的ID，没有固定规则但要求唯一，建议配合服务名
+          # uri: http://localhost:8001          #匹配后提供服务的路由地址
+          uri: lb://cloud-payment-service #匹配后提供服务的路由地址
+          predicates:
+            - Path=/payment/lb/**         # 断言，路径相匹配的进行路由
+
+eureka:
+  instance:
+    hostname: cloud-gateway-service
+  client: #服务提供者provider注册进eureka服务列表内
+    service-url:
+      register-with-eureka: true
+      fetch-registry: true
+      defaultZone: http://eureka7001.com:7001/eureka
+ 
+
+```
+
+**7.测试**
+
+访问[http://localhost:9527/payment/get/1](http://localhost:9527/payment/get/1 "http://localhost:9527/payment/get/1") 成功
+
+# 70.Gateway配置路由的两种方式
+
+**1.yml配置**
+
+**2.添加配置类bean配置**
+
+```java
+@Bean
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder)
+    {
+        RouteLocatorBuilder.Builder routes = builder.routes();
+
+        routes.route("path_route_atguigu", r -> r.path("/guonei").uri("http://news.baidu.com/guonei")).build();
+
+        return routes.build();
+
+    }
+    @Bean
+    public RouteLocator customRouteLocator2(RouteLocatorBuilder builder)
+    {
+        RouteLocatorBuilder.Builder routes = builder.routes();
+        routes.route("path_route_atguigu2", r -> r.path("/guoji").uri("http://news.baidu.com/guoji")).build();
+        return routes.build();
+    }
+```
+
+# 71.GateWay配置动态路由
+
+默认情况下Gateway会根据注册中心注册的服务列表，
+以注册中心上微服务名为**路径创建动态路由进行转发**，从而实现动态路由的功能
+
+**YML**
+
+需要注意的是uri的协议为lb，表示启用Gateway的负载均衡功能。
+
+**测试**
+
+浏览器输入 - [http://localhost:9527/payment/lb](http://localhost:9527/payment/lb "http://localhost:9527/payment/lb")  成功负载均衡
+
+# 72.GateWay常用的Predicate
+
+1.  The After Route Predicate Factory
+
+    *   After=2020-02-05T15:10:03.685+08:00\[Asia/Shanghai]
+
+2.  The Before Route Predicate Factory
+
+    *   Before=2020-02-05T15:10:03.685+08:00\[Asia/Shanghai]&#x20;
+
+3.  The Between Route Predicate Factory
+
+    *   Between=2020-02-02T17:45:06.206+08:00\[Asia/Shanghai],2020-03-25T18:59:06.206+08:00\[Asia/Shanghai]
+
+4.  The Cookie Route Predicate Factory
+
+    *   要求带上指定cookie
+
+5.  The Header Route Predicate Factory
+
+    *   要求带上指定请求头
+
+6.  The Host Route Predicate Factory
+
+    *   要求指定主机名
+
+7.  The Method Route Predicate Factory
+
+    *   Method=GET要求指定的方法
+
+8.  The Path Route Predicate Factory
+
+    *   Path=/payment/get/\*\* 路径匹配
+
+9.  The Query Route Predicate Factory
+
+    *   Query=username, \d+   后面是正则表达式，要有参数名username并且值还要是整数才能路由
+
+10. The RemoteAddr Route Predicate Factory
+
+11. The weight Route Predicate Factory
+
+# 73.GateWay的Filter
+
+路由过滤器可用于修改进入的HTTP请求和返回的HTTP响应
+
+Spring Cloud Gateway的Filter:
+
+*   生命周期：
+
+    *   pre
+
+    *   post
+
+*   种类（具体看官方文档）：
+
+    *   GatewayFilter - 有31种
+
+    *   GlobalFilter - 有10种
+
+常用的GatewayFilter：AddRequestParameter GatewayFilter
+
+自定义全局GlobalFilter：
+
+代码案例
+
+config类
+
+```java
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import java.util.Date;
+
+/**
+ * @author yangxiaozhuo
+ * @date 2022/11/08
+ */
+@Component
+public class MyLogGateWayFilter implements GlobalFilter, Ordered {
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        System.out.println("****come in 全局过滤器" + new Date());
+        String uname = exchange.getRequest().getQueryParams().getFirst("uname");
+        if (uname == null) {
+            System.out.println("用户名为null");
+            exchange.getResponse().setStatusCode(HttpStatus.NOT_ACCEPTABLE);
+            return exchange.getResponse().setComplete();
+        }
+        return chain.filter(exchange);
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
+}
+
+```
