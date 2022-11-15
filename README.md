@@ -14,6 +14,8 @@ springcloud学习记录
 
 *   [SpringCloud学习笔记74-94](#springcloud学习笔记74-94)
 
+*   [SpringCloud学习笔记95-137](#springcloud学习笔记95-137)
+
 *   [1 项目地址 笔记地址](#1-项目地址-笔记地址)
 
 *   [2 零基础微服务框架理论入门](#2-零基础微服务框架理论入门)
@@ -199,6 +201,64 @@ springcloud学习记录
 *   [93.Sleuth之zipkin搭建安装](#93sleuth之zipkin搭建安装)
 
 *   [94.Sleuth链路监控展现](#94sleuth链路监控展现)
+
+*   [95.Cloud Alibaba简介](#95cloud-alibaba简介)
+
+*   [96.Nacos简介和下载](#96nacos简介和下载)
+
+*   [97.Nacos安装](#97nacos安装)
+
+*   [98.Nacos之服务提供者注册](#98nacos之服务提供者注册)
+
+*   [99.Nacos之服务消费者注册和负载](#99nacos之服务消费者注册和负载)
+
+*   [100.Nacos服务注册中心对比提升](#100nacos服务注册中心对比提升)
+
+*   [101.Nacos之服务配置中心](#101nacos之服务配置中心)
+
+*   [102.Nacos之命名空间分组和DataID三者关系](#102nacos之命名空间分组和dataid三者关系)
+
+*   [106.Nacos集群\_架构说明](#106nacos集群_架构说明)
+
+*   [107.Nacos持久化切换配置](#107nacos持久化切换配置)
+
+*   [108.Nacos之Linux版本安装](#108nacos之linux版本安装)
+
+*   [109.Nacos集群配置(上)](#109nacos集群配置上)
+
+*   [110.Nacos集群配置(下)](#110nacos集群配置下)
+
+*   [111.Sentinel是什么](#111sentinel是什么)
+
+*   [112.Sentinel下载安装运行](#112sentinel下载安装运行)
+
+*   [113.Sentinel初始化监控](#113sentinel初始化监控)
+
+*   [114-119.Sentinel流控规则简介](#114-119sentinel流控规则简介)
+
+*   [120-123.Sentinel降级简介](#120-123sentinel降级简介)
+
+*   [124-125.Sentinel热点key](#124-125sentinel热点key)
+
+*   [127-136.SentinelResource配置](#127-136sentinelresource配置)
+
+*   [137.Sentinel持久化规则](#137sentinel持久化规则)
+
+*   [138.分布式事务问题由来](#138分布式事务问题由来)
+
+*   [139.Seata术语](#139seata术语)
+
+*   [140.Seata-Server安装](#140seata-server安装)
+
+*   [141.Seata业务数据库准备](#141seata业务数据库准备)
+
+*   [142-146.Seata之Order-Module配置搭建](#142-146seata之order-module配置搭建)
+
+*   [147.Seata之@GlobalTransactional验证](#147seata之globaltransactional验证)
+
+*   [148.Seata之原理简介](#148seata之原理简介)
+
+*   [Spring Cloud组件总结](#spring-cloud组件总结)
 
 # SpringCloud学习笔记1-14
 
@@ -5124,4 +5184,1018 @@ spring:
 5.打开浏览器访问: [http://localhost:9411](http://localhost:9411 "http://localhost:9411")
 
 ![](image/image_EGQ9HYithP.png)
+
+# SpringCloud学习笔记95-137
+
+# 95.Cloud Alibaba简介
+
+[官网](https://github.com/alibaba/spring-cloud-alibaba/blob/master/README-zh.md "官网")
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+            <version>2.2.5.RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+```
+
+*   中文
+
+    *   [https://github.com/alibaba/spring-cloud-alibaba/blob/master/README-zh.md](https://github.com/alibaba/spring-cloud-alibaba/blob/master/README-zh.md "https://github.com/alibaba/spring-cloud-alibaba/blob/master/README-zh.md")
+
+# 96.Nacos简介和下载
+
+**Nacos = Eureka+Config+Bus**
+
+去哪下
+
+*   [https://github.com/alibaba/nacos/releases](https://github.com/alibaba/nacos/releases "https://github.com/alibaba/nacos/releases")
+
+*   [官网文档](<https://spring-cloud-alibaba-group.github.io/github-pages/greenwich/spring-cloud-alibaba.html#_spring cloud alibaba nacos_discovery> "官网文档")
+
+| 服务注册与发现框架 | CAP模型 | 控制台管理 | 社区活跃度      |
+| --------- | ----- | ----- | ---------- |
+| Eureka    | AP    | 支持    | 低(2.x版本闭源) |
+| Zookeeper | CP    | 不支持   | 中          |
+| consul    | CP    | 支持    | 高          |
+| Nacos     | AP    | 支持    | 高          |
+
+# 97.Nacos安装
+
+*   从[官网](https://github.com/alibaba/nacos/releases "官网")下载Nacos
+
+*   解压安装包，直接运行bin目录下的startup.cmd
+
+*   命令运行成功后直接访问http\://localhost:8848/nacos，默认账号密码都是nacos
+
+![](image/image_03erzyfUFd.png)
+
+# 98.Nacos之服务提供者注册
+
+**新建Module - cloudalibaba-provider-payment9001**
+
+**POM**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springcloud</artifactId>
+        <groupId>com.yxz.springcloud</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloudalibaba-provider-payment9001</artifactId>
+
+    <!-- SpringBoot整合Web组件 -->
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!--日常通用jar包配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
+```
+
+**yml**
+
+```yaml
+server:
+  port: 9001
+spring:
+  application:
+    name: nacos-payment-provider
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+```
+
+**主启动**
+
+```java
+@SpringBootApplication
+@EnableDiscoveryClient
+public class PaymentMain9001 {
+    public static void main(String[] args) {
+        SpringApplication.run(PaymentMain9001.class, args);
+    }
+}
+```
+
+**业务类**
+
+```java
+@RestController
+public class PaymentController {
+    @Value("${server.port}")
+    private String serverPort;
+
+    @GetMapping("/payment/nacos/{id}")
+    public String getPayment(@PathVariable("id") Integer id) {
+        return "nacos registry, serverPort: "+ serverPort+"\t id"+id;
+    }
+}
+```
+
+测试
+
+*   [http://localhost:9001/payment/nacos/1](http://localhost:9001/payment/nacos/1 "http://localhost:9001/payment/nacos/1")
+
+# 99.Nacos之服务消费者注册和负载
+
+**新建Module - cloudalibaba-consumer-nacos-order83**
+
+**pom同上**
+
+**yml**
+
+```yaml
+server:
+  port: 83
+spring:
+  application:
+    name: nacos-payment-consumer
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+#消费者将要去访问的微服务名称(注册成功进nacos的微服务提供者)
+service-url:
+  nacos-user-service: http://nacos-payment-provider
+logging:
+  level:
+    com.yxz: debug
+```
+
+**主启动**
+
+```java
+@SpringBootApplication
+@EnableDiscoveryClient
+public class Consumer83 {
+    public static void main(String[] args) {
+        SpringApplication.run(Consumer83.class, args);
+    }
+}
+```
+
+**业务类**
+
+config
+
+```java
+@Configuration
+public class ApplicationContestConfig {
+    @Bean
+    @LoadBalanced
+    public RestTemplate getRestTemplate(){
+        return new RestTemplate();
+    }
+}
+```
+
+controller
+
+```java
+@RestController
+public class ConsumerController {
+
+    @Value("${service-url.nacos-user-service}")
+    private String serverURL;
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @GetMapping("/consumer/payment/nacos/{id}")
+    public String paymentInfo(@PathVariable("id") Long id) {
+        return restTemplate.getForObject(serverURL + "/payment/nacos/" + id, String.class);
+    }
+
+}
+
+```
+
+测试
+
+*   启动nacos控制台
+
+*   [http://localhost:83/Eonsumer/payment/nacos/13](http://localhost:83/Eonsumer/payment/nacos/13 "http://localhost:83/Eonsumer/payment/nacos/13")
+
+    *   83访问9001/9002，轮询负载OK
+
+# 100.Nacos服务注册中心对比提升
+
+**Nacos支持AP和CP模式的切换**
+
+切换命令：
+
+`curl -X PUT '$NACOS_SERVER:8848/nacos/v1/ns/operator/switches?entry=serverMode&value=CP`
+
+# 101.Nacos之服务配置中心
+
+基础配置
+
+**建cloudalibaba-config-nacos-client3377**
+
+**pom**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springcloud</artifactId>
+        <groupId>com.yxz.springcloud</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cloudalibaba-config-nacos-client3377</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!--日常通用jar包配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
+```
+
+**yml**
+
+boostrap.yml
+
+```yaml
+# nacos配置
+server:
+  port: 3377
+
+spring:
+  application:
+    name: nacos-config-client
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 #Nacos服务注册中心地址
+      config:
+        server-addr: localhost:8848 #Nacos作为配置中心地址
+        file-extension: yaml #指定yaml格式的配置
+        group: DEV_GROUP
+        namespace: 93958db7-1b87-45e6-aee2-03ac1423fe76
+```
+
+application.yml
+
+```yaml
+spring:
+  profiles:
+    active: dev # 表示开发环境
+
+```
+
+**主启动**
+
+```java
+@EnableDiscoveryClient
+@SpringBootApplication
+public class NacosConfigClientMain3377 {
+    public static void main(String[] args) {
+        SpringApplication.run(NacosConfigClientMain3377.class, args);
+    }
+}
+```
+
+**业务类**
+
+```java
+@RestController
+@RefreshScope //在控制器类加入@RefreshScope注解使当前类下的配置支持Nacos的动态刷新功能。
+public class ConfigClientController
+{
+    @Value("${config.info}")
+    private String configInfo;
+
+    @GetMapping("/config/info")
+    public String getConfigInfo() {
+        return configInfo;
+    }
+}
+```
+
+在 Nacos Spring Cloud中,dataId的完整格式如下：
+
+\${prefix}-{spring-profile.active}.\${file-extension}
+
+# 102.Nacos之命名空间分组和DataID三者关系
+
+![](image/image_lsNtmUIVwO.png)
+
+namespace→group→profile.active
+
+等效于：学校→学院→班级
+
+中间几章没什么好说的
+
+# 106.Nacos集群\_架构说明
+
+![](image/image_rKP92YXZYf.png)
+
+按照上述，**我们需要mysql数据库**。
+
+[官网说明](https://nacos.io/zh-cn/docs/deployment.html "官网说明")
+
+默认Nacos使用嵌入式数据库实现数据的存储。所以，如果启动多个默认配置下的Nacos节点，数据存储是存在一致性问题的。为了解决这个问题，**Nacos采用了集中式存储的方式来支持集群化部署，目前只支持MySQL的存储**。
+
+# 107.Nacos持久化切换配置
+
+1.  安装数据库，版本要求:5.6.5+
+
+2.  初始化mysq数据库，数据库初始化文件: nacos-mysql.sql
+
+3.  修改conf/application.properties文件，增加支持mysql数据源配置（目前只支持mysql)，添加mysql数据源的url、用户名和密码。
+
+```.properties
+spring.datasource.platform=mysql
+
+db.num=1
+db.url.0=jdbc:mysql://11.162.196.16:3306/nacos_devtest?severTimezone=UTC&characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true
+db.user=nacos_devtest
+db.password=youdontknow
+
+```
+
+mysql8的坑
+
+1.  要加时区
+
+2.  要安装对应jar包，放在plugins/mysql下
+
+如果还是报错，请按照以下方式
+
+```yaml
+#对于107使用mysql8的朋友，可以把nacos换为从1.3.1版本，（我试过1.4.0也报错）
+#同时在conf下的application.properties中加入老师的配置再加上
+#&serverTimezone=UTC，最后在bin目录下cmd，
+#然后输入startup.cmd -m standalone，然后就行了
+```
+
+这里版本我踩了坑，最后选择了1.3.1，其他尝试加了jar包也不行
+
+![](image/image_yUMrVJGDgm.png)
+
+# 108.Nacos之Linux版本安装
+
+预计需要，1个Nginx+3个nacos注册中心+1个mysql
+
+内存给大一点，2个g的虚拟机跑的有点卡，建议3个g，并且设置nacos的内存大小为512m，可以流畅运行
+
+下载的也是1.3.1版本
+
+# 109.Nacos集群配置(上)
+
+**1.进入mysql，创建数据库**
+
+```bash
+create database nacos_config;
+use nacos_config;
+source /opt/software/nacos/config/nacos-mysql.sql
+```
+
+**2.application.properties配置**
+
+同window，见107章
+
+**3.Linux服务器上nacos的集群配置cluster.conf**
+
+```bash
+192.168.20.128:3333
+192.168.20.128:4444
+192.168.20.128:5555
+```
+
+**4.编辑Nacos的启动脚本startup.sh，使它能够接受不同的启动端口**
+
+照着老师的抄
+
+执行三次startup.sh - p 端口号
+
+# 110.Nacos集群配置(下)
+
+**5.Nginx的配置，由它作为负载均衡器**
+
+修改nginx的配置文件 - nginx.conf
+
+![](image/image_lBWEM69PqA.png)
+
+![](image/image_iEs3iiHP9O.png)
+
+**测试**
+
+*   启动3个nacos注册中心
+
+    *   `startup.sh - p 3333`
+
+    *   `startup.sh - p 4444`
+
+    *   `startup.sh - p 5555`
+
+    *   查看nacos进程启动数`ps -ef | grep nacos | grep -v grep | wc -l`
+
+*   启动nginx
+
+    *   `./nginx -c /usr/local/nginx/conf/nginx.conf`
+
+    *   查看nginx进程`ps - ef| grep nginx`
+
+*   测试通过nginx，访问nacos - [http://192.168.111.144:1111/nacos/#/login](http://192.168.111.144:1111/nacos/#/login "http://192.168.111.144:1111/nacos/#/login")
+
+*   新建一个配置测试
+
+*   查看数据库，有新家的信息
+
+# 111.Sentinel是什么
+
+[官方Github](https://github.com/alibaba/Sentinel "官方Github")
+
+[官方文档](https://sentinelguard.io/zh-cn/docs/introduction.html "官方文档")
+
+Hystrix与Sentinel比较：
+
+*   Hystrix
+
+    1.  需要我们程序员自己手工搭建监控平台
+
+    2.  没有一套web界面可以给我们进行更加细粒度化得配置流控、速率控制、服务熔断、服务降级
+
+*   Sentinel
+
+    1.  单独一个组件，可以独立出来。
+
+    2.  直接界面化的细粒度统一配置。
+
+# 112.Sentinel下载安装运行
+
+*   下载
+
+    *   [https://github.com/alibaba/Sentinel/releases](https://github.com/alibaba/Sentinel/releases "https://github.com/alibaba/Sentinel/releases")
+
+    *   下载到本地sentinel-dashboard-1.7.0.jar
+
+运行
+
+*   前提
+
+    *   Java 8 环境
+
+    *   8080端口不能被占用
+
+*   访问Sentinel管理界面
+
+    *   localhost:8080
+
+    *   登录账号密码均为sentinel
+
+# 113.Sentinel初始化监控
+
+**启动Nacos8848成功**
+
+**新建工程 - cloudalibaba-sentinel-service8401**
+
+```xml
+<!--SpringCloud ailibaba sentinel -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+</dependency>
+```
+
+**YML**
+
+```yaml
+spring:
+  application:
+    name: cloudalibaba-sentinel-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 #Nacos服务注册中心地址
+    sentinel:
+      transport:
+        dashboard: localhost:8080 #配置Sentinel dashboard地址
+        port: 8719
+```
+
+**controller**
+
+```java
+@RestController
+@Slf4j
+public class FlowLimitController {
+    @GetMapping("/testA")
+    public String testA()
+    {
+        return "------testA";
+    }
+
+    @GetMapping("/testB")
+    public String testB()
+    {
+        return "------testB";
+    }
+    @GetMapping("/testD")
+    public String testD()
+    {
+        //暂停几秒钟线程
+        try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
+        log.info("testD 测试RT");
+        return "------testD";
+    }
+    @GetMapping("/testE")
+    public String testE()
+    {
+        log.info("testE 测试异常数");
+        int age = 10/0;
+        return "------testE 测试异常数";
+    }
+
+
+    @GetMapping("/testHotKey")
+    @SentinelResource(value = "testHotKey",blockHandler = "deal_testHotKey" /*兜底方法*/)
+    public String testHotKey(@RequestParam(value = "p1",required = false) String p1,
+                             @RequestParam(value = "p2",required = false) String p2) {
+        //int age = 10/0;
+        return "------testHotKey";
+    }
+
+    /*兜底方法*/
+    public String deal_testHotKey (String p1, String p2, BlockException exception) {
+        return "------deal_testHotKey,o(╥﹏╥)o";
+        //sentinel系统默认的提示：Blocked by Sentinel (flow limiting)
+    }
+}
+```
+
+启动后访问异常接口，可以在sentienl控制台看到
+
+# 114-119.Sentinel流控规则简介
+
+未来几章都是介绍这个，不难，直接一章总结完
+
+![](image/image_0oXVMX3Zl6.png)
+
+可以针对每个接口或者controller配置的value 值设置拦截规则
+
+![](image/image_mdaXjy7Xic.png)
+
+资源名就是id，阈值类型，QPS是单机的访问数，只允许一个访问，单机阈值的单位是s
+
+线程数，是controller只允许设置的x个线程进入系统
+
+快速失败：直接返回fallback的结果
+
+warmup：冷启动，阈值从设置阈的1/3开始慢慢上升
+
+![](image/image_MgJ6WRNH3J.png)
+
+排队等待：在设置的时间内，会排队等待处理结果
+
+关联：设置资源名A关联B，当B出现问题是A被限流。使用场景，支付场景高压时，下单场景限流
+
+链路：符合条件时，从链路开始和结尾都限流
+
+# 120-123.Sentinel降级简介
+
+[官方文档](https://github.com/alibaba/Sentinel/wiki/熔断降级 "官方文档")
+
+![](image/image_I4VVQZjU5T.png)
+
+*   RT（平均响应时间，秒级）
+
+    *   平均响应时间 超出阈值 且 在时间窗口内通过的请求>=5，两个条件同时满足后触发降级。
+
+    *   窗口期过后关闭断路器。
+
+    *   RT最大4900（更大的需要通过-Dcsp.sentinel.statistic.max.rt=XXXX才能生效）。
+
+*   异常比列（秒级）
+
+    *   QPS >= 5且异常比例（秒级统计）超过阈值时，触发降级;时间窗口结束后，关闭降级 。
+
+*   异常数(分钟级)
+
+    *   异常数(分钟统计）超过阈值时，触发降级;时间窗口结束后，关闭降级
+
+对比限流和降级
+
+*   限流：只要超过设定阈值，直接不让进入controller的方法
+
+*   降级：能进入controller的情况下，发生错误，并达到设定阈值，服务降级
+
+# 124-125.Sentinel热点key
+
+![](image/image_EzAkcgQ4JQ.png)
+
+对某个请求，携带某个请求值的时候，进行限流。
+
+# 127-136.SentinelResource配置
+
+自定义限流处理类 - 创建CustomerBlockHandler类用于自定义限流处理逻辑
+
+```java
+    @GetMapping("/rateLimit/customerBlockHandler")
+    @SentinelResource(value = "customerBlockHandler",
+            blockHandlerClass = CustomerBlockHandler.class,//<-------- 自定义限流处理类
+            blockHandler = "handlerException2",
+            fallback = "handlerFallback")//<-----------
+    public CommonResult customerBlockHandler()
+    {
+        return new CommonResult(200,"按客戶自定义",new Payment(2020L,"serial003"));
+    }
+```
+
+主要介绍了注解的用法
+
+value就算id
+
+blockHander是出现服务限流的调用返回方法
+
+blockHanderClass是blockHander方法所在类，默认在本类
+
+fallback是出现服务降级去找的方法，java异常去找他
+
+出现java异常去找fallback，流控异常找blockhander，同时异常 找blockhander
+
+# 137.Sentinel持久化规则
+
+手动配置到nacos，nacos实现持久化，启服务后自己去nacos找
+
+# 138.分布式事务问题由来
+
+一句话：**一次业务操作需要跨多个数据源或需要跨多个系统进行远程调用，就会产生分布式事务问题。**
+
+# 139.Seata术语
+
+Seata是一款开源的分布式事务解决方案，致力于在微服务架构下提供高性能和简单易用的分布式事务服务。
+
+[官方网址](http://seata.io/zh-cn/ "官方网址")
+
+分布式事务处理过程的一ID+三组件模型：
+
+*   Transaction ID XID 全局唯一的事务ID
+
+*   三组件概念
+
+    *   TC (Transaction Coordinator) - 事务协调者：维护全局和分支事务的状态，驱动全局事务提交或回滚。
+
+    *   TM (Transaction Manager) - 事务管理器：定义全局事务的范围：开始全局事务、提交或回滚全局事务。
+
+    *   RM (Resource Manager) - 资源管理器：管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚。
+
+处理过程：
+
+1.  TM向TC申请开启一个全局事务，全局事务创建成功并生成一个全局唯一的XID；
+
+2.  XID在微服务调用链路的上下文中传播；
+
+3.  RM向TC注册分支事务，将其纳入XID对应全局事务的管辖；
+
+4.  TM向TC发起针对XID的全局提交或回滚决议；
+
+5.  TC调度XID下管辖的全部分支事务完成提交或回滚请求。
+
+![](image/image_2Iv_pbWYGD.png)
+
+# 140.Seata-Server安装
+
+**去哪下**
+
+发布说明: [https://github.com/seata/seata/releases](https://github.com/seata/seata/releases "https://github.com/seata/seata/releases")
+
+**怎么玩**
+
+本地@Transactional （spring时候）
+
+全局@GlobalTransactional （分布式时候）
+
+**Seata-Server安装**
+
+官网地址 - [http://seata.io/zh-cn/](http://seata.io/zh-cn/ "http://seata.io/zh-cn/")
+
+seata-server-0.9.0.zip解压到指定目录并修改conf目录下的file.conf配置文件
+
+主要修改:自定义事务组名称+事务日志存储模式为db +数据库连接信息
+
+```yaml
+service {
+    ##fsp_tx_group是自定义的
+    vgroup_mapping.my.test.tx_group="fsp_tx_group" 
+    default.grouplist = "127.0.0.1:8091"
+    enableDegrade = false
+    disable = false
+    max.commitretry.timeout= "-1"
+    max.ollbackretry.timeout= "-1"
+}
+
+```
+
+store模块
+
+```yaml
+store {
+  ## store mode: file、db
+  mode = "db"
+
+  ## file store
+  file {
+    dir = "sessionStore"
+
+    # branch session size , if exceeded first try compress lockkey, still exceeded throws exceptions
+    max-branch-session-size = 16384
+    # globe session size , if exceeded throws exceptions
+    max-global-session-size = 512
+    # file buffer size , if exceeded allocate new buffer
+    file-write-buffer-cache-size = 16384
+    # when recover batch read size
+    session.reload.read_size = 100
+    # async, sync
+    flush-disk-mode = async
+  }
+
+  ## database store
+  db {
+    ## the implement of javax.sql.DataSource, such as DruidDataSource(druid)/BasicDataSource(dbcp) etc.
+    datasource = "dbcp"
+    ## mysql/oracle/h2/oceanbase etc.
+    db-type = "mysql"
+    driver-class-name = "com.mysql.cj.jdbc.Driver"
+    url = "jdbc:mysql://127.0.0.1:3306/seata?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false"
+    user = "root"
+    password = "root"
+    min-conn = 1
+    max-conn = 3
+    global.table = "global_table"
+    branch.table = "branch_table"
+    lock-table = "lock_table"
+    query-limit = 100
+  }
+}
+```
+
+mysql数据库新建库seata，在seata库里建表
+
+修改seata-server-0.9.0\seata\conf目录下的registry.conf配置文件
+
+```yaml
+registry {
+  # file 、nacos 、eureka、redis、zk、consul、etcd3、sofa
+  type = "nacos"
+
+  nacos {
+    serverAddr = "localhost:8848"
+    namespace = ""
+    cluster = "default"
+  }
+}
+```
+
+目的是：指明注册中心为nacos，及修改nacos连接信息
+
+先启动Nacos端口号8848 nacos\bin\startup.cmd
+
+再启动seata-server - seata-server-0.9.0\seata\bin\seata-server.bat
+
+# 141.Seata业务数据库准备
+
+**一言蔽之**，下订单—>扣库存—>减账户(余额)。
+
+创建业务数据库
+
+*   seata\_ order：存储订单的数据库;
+
+*   seata\_ storage：存储库存的数据库;
+
+*   seata\_ account：存储账户信息的数据库。
+
+按照上述3库分别建对应业务表
+
+```sql
+CREATE TABLE t_order (
+    `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT(11) DEFAULT NULL COMMENT '用户id',
+    `product_id` BIGINT(11) DEFAULT NULL COMMENT '产品id',
+    `count` INT(11) DEFAULT NULL COMMENT '数量',
+    `money` DECIMAL(11,0) DEFAULT NULL COMMENT '金额',
+    `status` INT(1) DEFAULT NULL COMMENT '订单状态: 0:创建中; 1:已完结'
+) ENGINE=INNODB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+SELECT * FROM t_order;
+
+CREATE TABLE t_storage (
+`id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+`product_id` BIGINT(11) DEFAULT NULL COMMENT '产品id',
+`total` INT(11) DEFAULT NULL COMMENT '总库存',
+`used` INT(11) DEFAULT NULL COMMENT '已用库存',
+`residue` INT(11) DEFAULT NULL COMMENT '剩余库存'
+) ENGINE=INNODB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+INSERT INTO seata_storage.t_storage(`id`, `product_id`, `total`, `used`, `residue`)
+VALUES ('1', '1', '100', '0','100');
+
+SELECT * FROM t_storage;
+
+CREATE TABLE t_account(
+  `id` BIGINT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'id',
+  `user_id` BIGINT(11) DEFAULT NULL COMMENT '用户id',
+  `total` DECIMAL(10,0) DEFAULT NULL COMMENT '总额度',
+  `used` DECIMAL(10,0) DEFAULT NULL COMMENT '已用余额',
+  `residue` DECIMAL(10,0) DEFAULT '0' COMMENT '剩余可用额度'
+) ENGINE=INNODB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+INSERT INTO seata_account.t_account(`id`, `user_id`, `total`, `used`, `residue`)
+VALUES ('1', '1', '1000', '0', '1000');
+
+SELECT * FROM t_account;
+
+```
+
+*   订单-库存-账户3个库下**都需要建各自的回滚日志表**
+
+```sql
+-- the table to store seata xid data
+-- 0.7.0+ add context
+-- you must to init this sql for you business databese. the seata server not need it.
+-- 此脚本必须初始化在你当前的业务数据库中，用于AT 模式XID记录。与server端无关（注：业务数据库）
+-- 注意此处0.3.0+ 增加唯一索引 ux_undo_log
+drop table `undo_log`;
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  `ext` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+```
+
+# 142-146.Seata之Order-Module配置搭建
+
+seata-order-service2001
+
+seata-storage-service2002
+
+seata-account-service2003
+
+# 147.Seata之@GlobalTransactional验证
+
+正常测试，可以下单
+
+如果出现错误，或者超时，没有归滚
+
+加上 **@GlobalTransactional**
+
+```java
+@GlobalTransactional(name = "fsp-create-order",rollbackFor = Exception.class)
+    public void create(Order order)
+    {
+    ...
+    }
+```
+
+还是模拟AccountServiceImpl添加超时，下单后数据库数据并没有任何改变，记录都添加不进来，**达到出异常，数据库回滚的效果**。
+
+# 148.Seata之原理简介
+
+TC：seata服务器
+
+TM：标记了 **@GlobalTransactional** 事务发起方
+
+RM：事务的参与方
+
+![](image/image_x0dNMNB8-A.png)
+
+*   一阶段加载
+
+在一阶段，Seata会拦截“业务SQL”
+
+1.  解析SQL语义，找到“业务SQL" 要更新的业务数据，在业务数据被更新前，将其保存成"before image”
+
+2.  执行“业务SQL" 更新业务数据，在业务数据更新之后,
+
+3.  其保存成"after image”，最后生成行锁。
+
+以上操作全部在一个数据库事务内完成, 这样保证了一阶段操作的原子性
+
+*   二阶段提交
+
+二阶段如果顺利提交的话，因为"业务SQL"在一阶段已经提交至数据库，所以Seata框架只需将一阶段保存的快照数据和行锁删掉，完成数据清理即可。
+
+![](image/image_t_vnKgCaFD.png)
+
+*   二阶段回滚
+
+二阶段如果是回滚的话，Seata 就需要回滚一阶段已经执行的 “业务SQL"，还原业务数据。
+
+回滚方式便是用"before image"还原业务数据；但在还原前要首先要校验脏写，对比“数据库当前业务数据”和"after image"。
+
+如果两份数据完全一致就说明没有脏写， 可以还原业务数据，如果不一致就说明有脏写, 出现脏写就需要转人工处理。
+
+![](image/image_SeuUnRz9K-.png)
+
+# Spring Cloud组件总结
+
+| 组件        | 分类               | 简介 | 官网 | 笔记 |
+| --------- | ---------------- | -- | -- | -- |
+| Eureka    | 服务注册中心           |    |    |    |
+| Zookeeper | 服务注册中心           |    |    |    |
+| Consul    | 服务注册中心           |    |    |    |
+| Ribbon    | 服务调用             |    |    |    |
+| OpenFeign | 服务调用             |    |    |    |
+| Hystrix   | 服务降级             |    |    |    |
+| GateWay   | 服务网关             |    |    |    |
+| Config    | 服务配置             |    |    |    |
+| Bus       | 服务总线             |    |    |    |
+| Stream    | 消息队列             |    |    |    |
+| Sleuth    | 服务跟踪             |    |    |    |
+| Nacos     | 服务注册中心、服务配置、服务总线 |    |    |    |
+| Sentinel  | 服务降级             |    |    |    |
+| Seata     | 分布式事务            |    |    |    |
+
 
